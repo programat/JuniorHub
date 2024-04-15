@@ -1,16 +1,18 @@
-<!-- bookmarks.html -->
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>Закладки</h1>
-    
-    {% for bookmark in bookmarks %}
-        <div>
-            <h2><a href="{% url 'vacancy_detail' bookmark.vacancy.id %}">{{ bookmark.vacancy.title }}</a></h2>
-            <p>{{ bookmark.vacancy.company }}</p>
-            <p>{{ bookmark.vacancy.description|truncatewords:20 }}</p>
-        </div>
-    {% empty %}
-        <p>У вас пока нет вакансий в закладках.</p>
-    {% endfor %}
+    <h2>Мои закладки</h2>
+    {% if bookmarks %}
+        <ul>
+            {% for bookmark in bookmarks %}
+                <li>
+                    <h3>{{ bookmark.vacancy.name }}</h3>
+                    <p>{{ bookmark.vacancy.company }}</p>
+                    <a href="{% url 'vacancy_detail' bookmark.vacancy.id %}">Подробнее</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>У вас пока нет сохраненных вакансий.</p>
+    {% endif %}
 {% endblock %}

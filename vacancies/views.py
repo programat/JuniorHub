@@ -1,4 +1,5 @@
 import requests
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404, redirect
@@ -75,3 +76,9 @@ def add_to_bookmarks(request, vacancy_id):
 def vacancy_detail(request, vacancy_id):
     vacancy = get_object_or_404(Vacancy, pk=vacancy_id)
     return render(request, 'vacancies/vacancy_detail.html', {'vacancy': vacancy})
+
+
+@login_required
+def bookmarks(request):
+    bookmarks = Bookmark.objects.filter(user=request.user)
+    return render(request, 'vacancies/bookmarks.html', {'bookmarks': bookmarks})
