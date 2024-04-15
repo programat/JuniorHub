@@ -36,16 +36,16 @@ def search_vacancies(request):
         except requests.exceptions.HTTPError as e:
             return HttpResponse(f'Error: {e}', status=400)
 
-        # Сохраняем полученные вакансии в базу данных
-        for vacancy_data in vacancies['items']:
-            vacancy = Vacancy(
-                title=vacancy_data['name'],
-                description=vacancy_data.get('description', ''),
-                company=vacancy_data['employer']['name'],
-                url=vacancy_data['alternate_url'],
-                source='hh.ru'
-            )
-            vacancy.save()
+        # # Сохраняем полученные вакансии в базу данных
+        # for vacancy_data in vacancies['items']:
+        #     vacancy = Vacancy(
+        #         title=vacancy_data['name'],
+        #         description=vacancy_data.get('description', ''),
+        #         company=vacancy_data['employer']['name'],
+        #         url=vacancy_data['alternate_url'],
+        #         source='hh.ru'
+        #     )
+        #     vacancy.save()
 
         # Передаем вакансии в шаблон для отображения
         context = {'vacancies': vacancies['items']}
@@ -55,18 +55,40 @@ def search_vacancies(request):
 
 
 def add_to_bookmarks(request, vacancy_id):
-    vacancy = get_object_or_404(Vacancy, pk=vacancy_id)
+    api_client = HhApiClient()
+    vacancy_data = api_client.get_vacancy(vacancy_id)
 
     if request.method == 'POST':
-        # Получаем текущего пользователя
-        user = request.user
+        # Временно используем фиксированный id пользователя
+        user_id = 1
+
+        # Сохраняем информацию о вакансии в базу данных
+        vacancy, created = Vacancy.objects.get_or_create(
+            url=vacancy_data['alternate_url'],
+            defaults={
+                'title': vacancy_data['name'],
+                'description': vacancy_data.get('description', ''),
+                'company': vacancy_data['employer']['name'],
+                'source': 'hh.ru'
+            }
+        )
+        if created:
+            # Сохраняем дополнительную информацию о вакансии
+            VacancyDetail.objects.create(
+                vacancy=vacancy,
+                salary_from=vacancy_data['salary']['from'],
+                salary_to=vacancy_data['salary']['to'],
+                currency=vacancy_data['salary']['currency'],
+                city=vacancy_data['area']['name'],
+                experience=vacancy_data['experience']['name'],
+                employment_type=vacancy_data['employment']['name'],
+                schedule=vacancy_data['schedule']['name'],
+                skills=', '.join(skill['name'] for skill in vacancy_data['key_skills']),
+                source_id=vacancy_data['id']
+            )
 
         # Проверяем, есть ли уже эта вакансия в закладках у пользователя
-        bookmark, created = Bookmark.objects.get_or_create(user=user, vacancy=vacancy)
-
-        # Если вакансии не было в закладках, сохраняем ее в базу данных
-        if created:
-            vacancy.save_with_details()
+        bookmark, created = Bookmark.objects.get_or_create(user_id=user_id, vacancy=vacancy)
 
         return redirect('bookmarks')
 
@@ -74,11 +96,14 @@ def add_to_bookmarks(request, vacancy_id):
 
 
 def vacancy_detail(request, vacancy_id):
-    vacancy = get_object_or_404(Vacancy, pk=vacancy_id)
+    api_client = HhApiClient()
+    vacancy = api_client.get_vacancy(vacancy_id)
     return render(request, 'vacancies/vacancy_detail.html', {'vacancy': vacancy})
 
 
-@login_required
+# @login_required
 def bookmarks(request):
-    bookmarks = Bookmark.objects.filter(user=request.user)
+    # Временно используем фиксированный id пользователя
+    user_id = 1
+    bookmarks = Bookmark.objects.filter(user_id=user_id)
     return render(request, 'vacancies/bookmarks.html', {'bookmarks': bookmarks})

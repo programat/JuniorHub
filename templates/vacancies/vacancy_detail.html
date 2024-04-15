@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>{{ vacancy.title }}</h1>
-    <p>Компания: {{ vacancy.company }}</p>
-    <p>Описание: {{ vacancy.description }}</p>
-    <p>Город: {{ vacancy.details.city }}</p>
-    <p>Зарплата: {{ vacancy.details.salary_from }} - {{ vacancy.details.salary_to }} {{ vacancy.details.currency }}</p>
-    <p>Опыт работы: {{ vacancy.details.experience }}</p>
-    <p>Тип занятости: {{ vacancy.details.employment_type }}</p>
-    <p>График работы: {{ vacancy.details.schedule }}</p>
-    <p>Навыки: {{ vacancy.details.skills }}</p>
+    <h1>{{ vacancy.name }}</h1>
+    <p>Компания: {{ vacancy.employer.name }}</p>
+    <p>Описание: {{ vacancy.description|safe }}</p>
+    <p>Город: {{ vacancy.area.name }}</p>
+    <p>Зарплата: {{ vacancy.salary.from }} - {{ vacancy.salary.to }} {{ vacancy.salary.currency }}</p>
+    <p>Опыт работы: {{ vacancy.experience.name }}</p>
+    <p>Тип занятости: {{ vacancy.employment.name }}</p>
+    <p>График работы: {{ vacancy.schedule.name }}</p>
+    <p>Навыки: {% for skill in vacancy.key_skills %}{{ skill.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
 
     <form method="post" action="{% url 'add_to_bookmarks' vacancy.id %}">
         {% csrf_token %}

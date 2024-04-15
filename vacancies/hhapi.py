@@ -23,8 +23,7 @@ class HhApiClient:
         response.raise_for_status()
         return response.json()
 
-    def get_vacancy(self, url):
-        vacancy_id = url.split('/')[-1].split('?')[0]
+    def get_vacancy(self, vacancy_id):
         url = f'{self.BASE_URL}/vacancies/{vacancy_id}'
         response = self.session.get(url)
         response.raise_for_status()
