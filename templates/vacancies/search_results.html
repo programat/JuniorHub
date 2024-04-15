@@ -1,0 +1,15 @@
+<h1>Результаты поиска</h1>
+
+{% if vacancies %}
+    <ul>
+        {% for vacancy in vacancies %}
+            <li>
+                <h2>{{ vacancy.name }}</h2>
+                <p>{{ vacancy.employer.name }}</p>
+                <p>{{ vacancy.alternate_url }}</p>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>Не найдено вакансий по заданным критериям.</p>
+{% endif %}
