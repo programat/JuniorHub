@@ -74,17 +74,37 @@ def add_to_bookmarks(request, vacancy_id):
         )
         if created:
             # Сохраняем дополнительную информацию о вакансии
+            salary = vacancy_data.get('salary', {})
+            salary_from = salary.get('from')
+            salary_to = salary.get('to')
+            currency = salary.get('currency')
+
+            area = vacancy_data.get('area', {})
+            city = area.get('name', '')
+
+            experience = vacancy_data.get('experience', {})
+            experience_name = experience.get('name', '')
+
+            employment = vacancy_data.get('employment', {})
+            employment_type = employment.get('name', '')
+
+            schedule = vacancy_data.get('schedule', {})
+            schedule_name = schedule.get('name', '')
+
+            key_skills = vacancy_data.get('key_skills', [])
+            skills = ', '.join(skill.get('name', '') for skill in key_skills)
+
             VacancyDetail.objects.create(
                 vacancy=vacancy,
-                salary_from=vacancy_data['salary']['from'],
-                salary_to=vacancy_data['salary']['to'],
-                currency=vacancy_data['salary']['currency'],
-                city=vacancy_data['area']['name'],
-                experience=vacancy_data['experience']['name'],
-                employment_type=vacancy_data['employment']['name'],
-                schedule=vacancy_data['schedule']['name'],
-                skills=', '.join(skill['name'] for skill in vacancy_data['key_skills']),
-                source_id=vacancy_data['id']
+                salary_from=salary_from,
+                salary_to=salary_to,
+                currency=currency,
+                city=city,
+                experience=experience_name,
+                employment_type=employment_type,
+                schedule=schedule_name,
+                skills=skills,
+                source_id=vacancy_data.get('id')
             )
 
         # Проверяем, есть ли уже эта вакансия в закладках у пользователя

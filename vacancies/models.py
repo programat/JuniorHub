@@ -8,10 +8,13 @@ class Vacancy(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
     company = models.CharField(max_length=255)
-    url = models.URLField()
+    url = models.URLField(unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     source = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.title
 
     def save_with_details(self):
         # Сохраняем вакансию
@@ -48,7 +51,12 @@ class VacancyDetail(models.Model):
     source_id = models.CharField(max_length=50)
 
 
+# TODO: remove user_id field and use ForeignKey to User model when implementing authentication
 class Bookmark(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookmarks')
+    user_id = models.IntegerField()
+    # user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookmarks')
     vacancy = models.ForeignKey(Vacancy, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user_id} - {self.vacancy.title}"
