@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{{ vacancy.title }}</h1>
+    <p>Компания: {{ vacancy.company }}</p>
+    <p>Описание: {{ vacancy.description }}</p>
+    <p>Город: {{ vacancy.details.city }}</p>
+    <p>Зарплата: {{ vacancy.details.salary_from }} - {{ vacancy.details.salary_to }} {{ vacancy.details.currency }}</p>
+    <p>Опыт работы: {{ vacancy.details.experience }}</p>
+    <p>Тип занятости: {{ vacancy.details.employment_type }}</p>
+    <p>График работы: {{ vacancy.details.schedule }}</p>
+    <p>Навыки: {{ vacancy.details.skills }}</p>
+
+    <form method="post" action="{% url 'add_to_bookmarks' vacancy.id %}">
+        {% csrf_token %}
+        <button type="submit">Добавить в закладки</button>
+    </form>
+{% endblock %}

@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+from vacancies.hhapi import HhApiClient
+
 
 class Vacancy(models.Model):
     title = models.CharField(max_length=255)
@@ -10,6 +12,27 @@ class Vacancy(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     source = models.CharField(max_length=50)
+
+    def save_with_details(self):
+        # Сохраняем вакансию
+        self.save()
+
+        # Получаем детали вакансии из API HH.ru
+        api_client = HhApiClient()
+        vacancy_data = api_client.get_vacancy(self.url)
+
+        # Сохраняем детали вакансии
+        vacancy_detail, created = VacancyDetail.objects.get_or_create(vacancy=self)
+        vacancy_detail.salary_from = vacancy_data['salary']['from']
+        vacancy_detail.salary_to = vacancy_data['salary']['to']
+        vacancy_detail.currency = vacancy_data['salary']['currency']
+        vacancy_detail.city = vacancy_data['area']['name']
+        vacancy_detail.experience = vacancy_data['experience']['name']
+        vacancy_detail.employment_type = vacancy_data['employment']['name']
+        vacancy_detail.schedule = vacancy_data['schedule']['name']
+        vacancy_detail.skills = ', '.join(skill['name'] for skill in vacancy_data['key_skills'])
+        vacancy_detail.source_id = vacancy_data['id']
+        vacancy_detail.save()
 
 
 class VacancyDetail(models.Model):

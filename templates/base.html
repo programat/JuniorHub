@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Поиск вакансий{% endblock %}</title>
+    <title>{% block title %}Вакансии{% endblock %}</title>
 </head>
 <body>
     <header>
@@ -12,6 +12,7 @@
             <ul>
                 <li><a href="{% url 'index' %}">Главная</a></li>
                 <li><a href="{% url 'search_vacancies' %}">Поиск вакансий</a></li>
+{#                <li><a href="{% url 'bookmarks' %}">Закладки</a></li>#}
             </ul>
         </nav>
     </header>
@@ -22,7 +23,7 @@
     </main>
 
     <footer>
-        <p>&copy; 2023 Поиск вакансий. Все права защищены.</p>
+        <p>&copy; 2024 Поиск вакансий. Все права защищены.</p>
     </footer>
 </body>
 </html>

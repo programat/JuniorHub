@@ -1,15 +1,20 @@
-<h1>Результаты поиска</h1>
+<!-- search_results.html -->
+{% extends 'base.html' %}
 
-{% if vacancies %}
-    <ul>
-        {% for vacancy in vacancies %}
-            <li>
-                <h2>{{ vacancy.name }}</h2>
-                <p>{{ vacancy.employer.name }}</p>
-                <p>{{ vacancy.alternate_url }}</p>
-            </li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p>Не найдено вакансий по заданным критериям.</p>
-{% endif %}
+{% block content %}
+    <h1>Результаты поиска</h1>
+    
+    {% for vacancy in vacancies %}
+        <div>
+            <h2><a href="{% url 'vacancy_detail' vacancy.id %}">{{ vacancy.title }}</a></h2>
+            <p>{{ vacancy.company }}</p>
+            <p>{{ vacancy.description|truncatewords:20 }}</p>
+            <form method="post" action="{% url 'add_to_bookmarks' vacancy.id %}">
+                {% csrf_token %}
+                <button type="submit">Добавить в закладки</button>
+            </form>
+        </div>
+    {% empty %}
+        <p>Не найдено вакансий по заданным критериям.</p>
+    {% endfor %}
+{% endblock %}
