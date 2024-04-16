@@ -13,22 +13,17 @@ def index(request):
 
 
 def search_vacancies(request):
-    if request.method == 'POST':
+    if request.method == 'POST' or request.GET:
         query = request.POST.get('query', '')
         area_name = request.POST.get('area')
         experience = request.POST.get('experience')
 
-        page = request.GET.get('page', 1)
-        per_page = request.GET.get('per_page', 20)
+        page = int(request.GET.get('page', 1))
+        per_page = 20
 
-        # Формируем параметры для запроса
-        # params = {
-        #     'page': 0,
-        #     'per_page': 100
-        # }
         params = {
             'page': page,
-            'per_page': 100
+            'per_page': per_page
         }
 
         if query:
@@ -46,17 +41,30 @@ def search_vacancies(request):
 
         # Выполняем поиск вакансий через API HH.ru
         api_client = HhApiClient()
+        text = params.pop('text', '')
         try:
-            vacancies = api_client.search_vacancies(**params)
+            vacancies = api_client.search_vacancies(text, **params)
         except requests.exceptions.HTTPError as e:
             return HttpResponse(f'Error: {e}', status=400)
 
-        # Создаем объект Paginator для постраничной навигации
-        paginator = Paginator(vacancies['items'], per_page)
-        page_obj = paginator.get_page(page)
+        total_pages = vacancies['pages']
+        page_range = range(1, total_pages + 1)
 
-        # Передаем вакансии и объект страницы в шаблон для отображения
-        context = {'vacancies': page_obj.object_list, 'page_obj': page_obj}
+        if total_pages > 7:
+            if page <= 4:
+                page_range = range(1, 6)
+            elif page >= total_pages - 3:
+                page_range = range(total_pages - 4, total_pages + 1)
+            else:
+                page_range = range(page - 2, page + 3)
+
+        context = {
+            'vacancies': vacancies['items'],
+            'page': page,
+            'total_pages': total_pages,
+            'page_range': page_range,
+            'per_page': per_page
+        }
         return render(request, 'vacancies/search_results.html', context)
 
     return render(request, 'vacancies/search_form.html')

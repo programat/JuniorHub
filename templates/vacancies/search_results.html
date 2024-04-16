@@ -4,7 +4,7 @@
 {% block content %}
     <h1>Результаты поиска</h1>
 
-    {% for vacancy in page_obj %}
+    {% for vacancy in vacancies %}
         <div>
             <h2><a href="{% url 'vacancy_detail' vacancy.id %}">{{ vacancy.name }}</a></h2>
             <p>{{ vacancy.employer.name }}</p>
@@ -18,24 +18,26 @@
         <p>Не найдено вакансий по заданным критериям.</p>
     {% endfor %}
     <!-- Постраничная навигация -->
-    {% if page_obj.has_other_pages %}
+    {% if total_pages > 1 %}
         <div class="pagination">
-            {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}&per_page={{ page_obj.paginator.per_page }}">&laquo;
-                    Предыдущая</a>
+            {% if page > 1 %}
+                <a href="?page=1&per_page={{ per_page }}">&laquo; Первая</a>
+                <a href="?page={{ page|add:'-1' }}&per_page={{ per_page }}">&lsaquo; Предыдущая</a>
             {% endif %}
 
-            {% for page_num in page_obj.paginator.page_range %}
-                {% if page_obj.number == page_num %}
+            {% for page_num in page_range %}
+                {% if page_num == page %}
                     <span class="current-page">{{ page_num }}</span>
-                {% else %}
-                    <a href="?page={{ page_num }}&per_page={{ page_obj.paginator.per_page }}">{{ page_num }}</a>
+                {% elif page_num == 1 or page_num == total_pages or page_num >= page|add:'-2' and page_num <= page|add:'2' %}
+                    <a href="?page={{ page_num }}&per_page={{ per_page }}">{{ page_num }}</a>
+                {% elif page_num == page|add:'-3' or page_num == page|add:'3' %}
+                    <span class="ellipsis">...</span>
                 {% endif %}
             {% endfor %}
 
-            {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}&per_page={{ page_obj.paginator.per_page }}">Следующая
-                    &raquo;</a>
+            {% if page < total_pages %}
+                <a href="?page={{ page|add:'1' }}&per_page={{ per_page }}">Следующая &rsaquo;</a>
+                <a href="?page={{ total_pages|add:'-1' }}&per_page={{ per_page }}">Последняя &raquo;</a>
             {% endif %}
         </div>
     {% endif %}
