@@ -4,7 +4,7 @@
 {% block content %}
     <h1>Результаты поиска</h1>
 
-    {% for vacancy in vacancies %}
+    {% for vacancy in page_obj %}
         <div>
             <h2><a href="{% url 'vacancy_detail' vacancy.id %}">{{ vacancy.name }}</a></h2>
             <p>{{ vacancy.employer.name }}</p>
@@ -17,5 +17,27 @@
     {% empty %}
         <p>Не найдено вакансий по заданным критериям.</p>
     {% endfor %}
+    <!-- Постраничная навигация -->
+    {% if page_obj.has_other_pages %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}&per_page={{ page_obj.paginator.per_page }}">&laquo;
+                    Предыдущая</a>
+            {% endif %}
+
+            {% for page_num in page_obj.paginator.page_range %}
+                {% if page_obj.number == page_num %}
+                    <span class="current-page">{{ page_num }}</span>
+                {% else %}
+                    <a href="?page={{ page_num }}&per_page={{ page_obj.paginator.per_page }}">{{ page_num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}&per_page={{ page_obj.paginator.per_page }}">Следующая
+                    &raquo;</a>
+            {% endif %}
+        </div>
+    {% endif %}
 {% endblock %}
 

@@ -1,5 +1,6 @@
 import requests
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404, redirect
@@ -17,11 +18,19 @@ def search_vacancies(request):
         area_name = request.POST.get('area')
         experience = request.POST.get('experience')
 
+        page = request.GET.get('page', 1)
+        per_page = request.GET.get('per_page', 20)
+
         # Формируем параметры для запроса
+        # params = {
+        #     'page': 0,
+        #     'per_page': 100
+        # }
         params = {
-            'page': 0,
+            'page': page,
             'per_page': 100
         }
+
         if query:
             params['text'] = query
         if area_name:
@@ -42,8 +51,12 @@ def search_vacancies(request):
         except requests.exceptions.HTTPError as e:
             return HttpResponse(f'Error: {e}', status=400)
 
-        # Передаем вакансии в шаблон для отображения
-        context = {'vacancies': vacancies['items']}
+        # Создаем объект Paginator для постраничной навигации
+        paginator = Paginator(vacancies['items'], per_page)
+        page_obj = paginator.get_page(page)
+
+        # Передаем вакансии и объект страницы в шаблон для отображения
+        context = {'vacancies': page_obj.object_list, 'page_obj': page_obj}
         return render(request, 'vacancies/search_results.html', context)
 
     return render(request, 'vacancies/search_form.html')
