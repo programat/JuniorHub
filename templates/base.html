@@ -6,24 +6,31 @@
     <title>{% block title %}Вакансии{% endblock %}</title>
 </head>
 <body>
-    <header>
-        <h1>Поиск вакансий</h1>
-        <nav>
-            <ul>
-                <li><a href="{% url 'index' %}">Главная</a></li>
-                <li><a href="{% url 'search_vacancies' %}">Поиск вакансий</a></li>
-                <li><a href="{% url 'bookmarks' %}">Закладки</a></li>
-            </ul>
-        </nav>
-    </header>
+<header>
+    <h1>Поиск вакансий</h1>
+    <nav>
+        <ul>
+            <li><a href="{% url 'index' %}">Главная</a></li>
+            <li><a href="{% url 'search_vacancies' %}">Поиск вакансий</a></li>
+            <li><a href="{% url 'bookmarks' %}">Закладки</a></li>
+        </ul>
 
-    <main>
-        {% block content %}
-        {% endblock %}
-    </main>
+        {% if user.is_authenticated %}
+            <a href="{% url 'logout' %}">Выход</a>
+        {% else %}
+            <a href="{% url 'login' %}">Вход</a>
+            <a href="{% url 'register' %}">Регистрация</a>
+        {% endif %}
+    </nav>
+</header>
 
-    <footer>
-        <p>&copy; 2024 Поиск вакансий. Все права защищены.</p>
-    </footer>
+<main>
+    {% block content %}
+    {% endblock %}
+</main>
+
+<footer>
+    <p>&copy; 2024 Поиск вакансий. Все права защищены.</p>
+</footer>
 </body>
 </html>
