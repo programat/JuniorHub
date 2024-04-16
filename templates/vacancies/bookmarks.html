@@ -3,12 +3,14 @@
 {% block content %}
     <h2>Мои закладки</h2>
     {% if bookmarks %}
+        <a href="{% url 'update_bookmarks' %}" class="btn btn-primary">Обновить закладки</a>
         <ul>
             {% for bookmark in bookmarks %}
                 <li>
                     <h3>{{ bookmark.vacancy.name }}</h3>
                     <p>{{ bookmark.vacancy.company }}</p>
-                    <a href="{% url 'vacancy_detail' bookmark.vacancy.id %}">Подробнее</a>
+                    <a href="{% url 'bookmark_detail' bookmark.vacancy.id %}">Подробнее</a>
+                    <a href="{% url 'delete_bookmark' bookmark.vacancy.id %}" class="btn btn-danger">Удалить закладку</a>
                 </li>
             {% endfor %}
         </ul>

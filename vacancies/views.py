@@ -68,11 +68,22 @@ def add_to_bookmarks(request, vacancy_id):
             }
         )
         if created:
+            # Попытка сохранить детали вакансии (перешел к другому варианту)
+            # salary_from = vacancy_data.get('salary', {}).get('from', None),
+            # salary_to = vacancy_data.get('salary', {}).get('to', None),
+            # currency = vacancy_data.get('salary', {}).get('currency', ''),
+
             # Сохраняем дополнительную информацию о вакансии
             salary = vacancy_data.get('salary', {})
-            salary_from = salary.get('from')
-            salary_to = salary.get('to')
-            currency = salary.get('currency')
+            print(salary)
+            if salary is not None:
+                salary_from = salary.get('from', '')
+                salary_to = salary.get('to', '')
+                currency = salary.get('currency', '')
+            else:
+                salary_from = None
+                salary_to = None
+                currency = ''
 
             area = vacancy_data.get('area', {})
             city = area.get('name', '')
@@ -116,6 +127,50 @@ def vacancy_detail(request, vacancy_id):
     return render(request, 'vacancies/vacancy_detail.html', {'vacancy': vacancy})
 
 
+def bookmark_detail(request, vacancy_id):
+    vacancy = get_object_or_404(Vacancy.objects.prefetch_related('details'), pk=vacancy_id)
+    return render(request, 'vacancies/bookmark_detail.html', {'vacancy': vacancy})
+
+
+def update_bookmarks(request):
+    api_client = HhApiClient()
+    for vacancy in Vacancy.objects.all():
+        vacancy_id = vacancy.url.split('/')[-1]
+        vacancy_data = api_client.get_vacancy(vacancy_id)
+
+        vacancy.title = vacancy_data['name']
+        vacancy.company = vacancy_data['employer']['name']
+        vacancy.description = vacancy_data['description']
+        vacancy.save()
+
+        # Получаем или создаем объект VacancyDetail, связанный с текущей вакансией
+        vacancy_detail, created = VacancyDetail.objects.get_or_create(vacancy=vacancy)
+
+        salary = vacancy_data.get('salary')
+        vacancy_detail.city = vacancy_data.get('area', {}).get('name', '')
+        vacancy_detail.salary_from = salary['from'] if salary else None
+        vacancy_detail.salary_to = salary['to'] if salary else None
+        vacancy_detail.currency = salary['currency'] if salary else ''
+        vacancy_detail.experience = vacancy_data.get('experience', {}).get('name', '')
+        vacancy_detail.employment_type = vacancy_data.get('employment', {}).get('name', '')
+        vacancy_detail.schedule = vacancy_data.get('schedule', {}).get('name', '')
+        vacancy_detail.skills = ', '.join([skill['name'] for skill in vacancy_data.get('key_skills', [])])
+        vacancy_detail.save()
+
+    return redirect('bookmarks')
+
+
+# TODO: Change while implementing authentication
+# @login_required
+def delete_bookmark(request, vacancy_id):
+    # vacancy = get_object_or_404(Vacancy, pk=vacancy_id)
+    # request.user.bookmarks.remove(vacancy)
+    vacancy = get_object_or_404(Vacancy, pk=vacancy_id)
+    vacancy.delete()
+    return redirect('bookmarks')
+
+
+# TODO: Change while implementing authentication
 # @login_required
 def bookmarks(request):
     # Временно используем фиксированный id пользователя
