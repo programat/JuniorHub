@@ -60,3 +60,12 @@ class Bookmark(models.Model):
 
     def __str__(self):
         return f"{self.user_id} - {self.vacancy.title}"
+
+
+class Area(models.Model):
+    name = models.CharField(max_length=255)
+    code = models.CharField(max_length=50)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return self.name

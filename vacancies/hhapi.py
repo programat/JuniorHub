@@ -28,3 +28,19 @@ class HhApiClient:
         response = self.session.get(url)
         response.raise_for_status()
         return response.json()
+
+    def get_areas(self):
+        url = f'{self.BASE_URL}/areas'
+        response = self.session.get(url)
+        response.raise_for_status()
+        return response.json()
+
+    def find_area(self, area_name):
+        url = f'{self.BASE_URL}/suggests/areas'
+        params = {'text': area_name}
+        response = self.session.get(url, params=params)
+        response.raise_for_status()
+        data = response.json()
+        if data['items']:
+            return data['items'][0]['id']
+        return None

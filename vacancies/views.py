@@ -14,7 +14,7 @@ def index(request):
 def search_vacancies(request):
     if request.method == 'POST':
         query = request.POST.get('query', '')
-        area_id = request.POST.get('area')
+        area_name = request.POST.get('area')
         experience = request.POST.get('experience')
 
         # Формируем параметры для запроса
@@ -24,8 +24,14 @@ def search_vacancies(request):
         }
         if query:
             params['text'] = query
-        if area_id:
-            params['area'] = area_id
+        if area_name:
+            if not area_name.isdigit():
+                api_client = HhApiClient()
+                area_id = api_client.find_area(area_name)
+                if area_id:
+                    params['area'] = area_id
+            else:
+                params['area'] = area_name
         if experience:
             params['experience'] = experience
 
@@ -35,17 +41,6 @@ def search_vacancies(request):
             vacancies = api_client.search_vacancies(**params)
         except requests.exceptions.HTTPError as e:
             return HttpResponse(f'Error: {e}', status=400)
-
-        # # Сохраняем полученные вакансии в базу данных
-        # for vacancy_data in vacancies['items']:
-        #     vacancy = Vacancy(
-        #         title=vacancy_data['name'],
-        #         description=vacancy_data.get('description', ''),
-        #         company=vacancy_data['employer']['name'],
-        #         url=vacancy_data['alternate_url'],
-        #         source='hh.ru'
-        #     )
-        #     vacancy.save()
 
         # Передаем вакансии в шаблон для отображения
         context = {'vacancies': vacancies['items']}
