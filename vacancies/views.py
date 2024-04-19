@@ -75,8 +75,7 @@ def add_to_bookmarks(request, vacancy_id):
     vacancy_data = api_client.get_vacancy(vacancy_id)
 
     if request.method == 'POST':
-        # Временно используем фиксированный id пользователя
-        user_id = 1
+        user = request.user
 
         # Сохраняем информацию о вакансии в базу данных
         vacancy, created = Vacancy.objects.get_or_create(
@@ -135,7 +134,7 @@ def add_to_bookmarks(request, vacancy_id):
             )
 
         # Проверяем, есть ли уже эта вакансия в закладках у пользователя
-        bookmark, created = Bookmark.objects.get_or_create(user_id=user_id, vacancy=vacancy)
+        bookmark, created = Bookmark.objects.get_or_create(user=user, vacancy=vacancy)
 
         return redirect('bookmarks')
 
@@ -181,20 +180,13 @@ def update_bookmarks(request):
     return redirect('bookmarks')
 
 
-# TODO: Change while implementing authentication
-# @login_required
+@login_required
 def delete_bookmark(request, vacancy_id):
-    # vacancy = get_object_or_404(Vacancy, pk=vacancy_id)
-    # request.user.bookmarks.remove(vacancy)
     vacancy = get_object_or_404(Vacancy, pk=vacancy_id)
-    vacancy.delete()
+    request.user.bookmarks.filter(vacancy=vacancy).delete()
     return redirect('bookmarks')
 
-
-# TODO: Change while implementing authentication
-# @login_required
+@login_required
 def bookmarks(request):
-    # Временно используем фиксированный id пользователя
-    user_id = 1
-    bookmarks = Bookmark.objects.filter(user_id=user_id)
+    bookmarks = request.user.bookmarks.all()
     return render(request, 'vacancies/bookmarks.html', {'bookmarks': bookmarks})
