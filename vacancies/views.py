@@ -152,20 +152,25 @@ def bookmark_detail(request, vacancy_id):
     return render(request, 'vacancies/bookmark_detail.html', {'vacancy': vacancy})
 
 
+@login_required
 def update_bookmarks(request):
     api_client = HhApiClient()
-    for vacancy in Vacancy.objects.all():
+    bookmarks = request.user.bookmarks.all()
+    for bookmark in bookmarks:
+        vacancy = bookmark.vacancy
         vacancy_id = vacancy.url.split('/')[-1]
         vacancy_data = api_client.get_vacancy(vacancy_id)
 
+        # Обновляем данные вакансии и сохраняем изменения
         vacancy.title = vacancy_data['name']
         vacancy.company = vacancy_data['employer']['name']
         vacancy.description = vacancy_data['description']
         vacancy.save()
 
-        # Получаем или создаем объект VacancyDetail, связанный с текущей вакансией
+        # Обновляем или создаем объект VacancyDetail
         vacancy_detail, created = VacancyDetail.objects.get_or_create(vacancy=vacancy)
 
+        # Обновляем данные VacancyDetail и сохраняем изменения
         salary = vacancy_data.get('salary')
         vacancy_detail.city = vacancy_data.get('area', {}).get('name', '')
         vacancy_detail.salary_from = salary['from'] if salary else None

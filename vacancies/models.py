@@ -52,7 +52,6 @@ class VacancyDetail(models.Model):
     source_id = models.CharField(max_length=50)
 
 
-# TODO: remove user_id field and use ForeignKey to User model when implementing authentication
 class Bookmark(models.Model):
     # user_id = models.IntegerField()
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='bookmarks')
