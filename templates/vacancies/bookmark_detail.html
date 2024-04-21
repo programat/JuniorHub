@@ -3,7 +3,6 @@
 {% block content %}
     <h1>{{ vacancy.title }}</h1>
     <p>Компания: {{ vacancy.company }}</p>
-    <p>Описание: {{ vacancy.description|safe }}</p>
 
     {% if vacancy.details.exists %}
         {% with detail=vacancy.details.first %}
@@ -15,8 +14,9 @@
             <p>Навыки: {{ detail.skills }}</p>
         {% endwith %}
     {% else %}
-        <p>Дополнительная информация о вакансии отсутствует.</p>
+        <p>Основная информация о вакансии отсутствует.</p>
     {% endif %}
+    <p>Описание: {{ vacancy.description|safe }}</p>
 
 {#    <form method="post" action="{% url 'add_to_bookmarks' vacancy.id %}">#}
 {#        {% csrf_token %}#}

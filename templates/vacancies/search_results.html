@@ -2,44 +2,69 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>Результаты поиска</h1>
+    <h4>Результаты поиска</h4>
 
-    {% for vacancy in vacancies %}
-        <div>
-            <h2><a href="{% url 'vacancy_detail' vacancy.id %}">{{ vacancy.name }}</a></h2>
-            <p>{{ vacancy.employer.name }}</p>
-            <p>{{ vacancy.dalternate_url }}</p>
-            <form method="post" action="{% url 'add_to_bookmarks' vacancy.id %}">
-                {% csrf_token %}
-                <button type="submit">Сохранить в закладки</button>
-            </form>
-        </div>
-    {% empty %}
-        <p>Не найдено вакансий по заданным критериям.</p>
-    {% endfor %}
+    <div class="row">
+        {% for vacancy in vacancies %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title"><a href="{% url 'vacancy_detail' vacancy.id %}">{{ vacancy.name }}</a></h5>
+                        <p class="card-text">{{ vacancy.employer.name }}</p>
+                        <p>{{ vacancy.alternate_url }}</p>
+                        <form method="post" action="{% url 'add_to_bookmarks' vacancy.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-light">Сохранить в закладки</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col">
+                <p>Не найдено вакансий по заданным критериям.</p>
+            </div>
+        {% endfor %}
+    </div>
+
     <!-- Постраничная навигация -->
     {% if total_pages > 1 %}
-        <div class="pagination">
-            {% if page > 1 %}
-                <a href="?page=1&per_page={{ per_page }}">&laquo; Первая</a>
-                <a href="?page={{ page|add:'-1' }}&per_page={{ per_page }}">&lsaquo; Предыдущая</a>
-            {% endif %}
-
-            {% for page_num in page_range %}
-                {% if page_num == page %}
-                    <span class="current-page">{{ page_num }}</span>
-                {% elif page_num == 1 or page_num == total_pages or page_num >= page|add:'-2' and page_num <= page|add:'2' %}
-                    <a href="?page={{ page_num }}&per_page={{ per_page }}">{{ page_num }}</a>
-                {% elif page_num == page|add:'-3' or page_num == page|add:'3' %}
-                    <span class="ellipsis">...</span>
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if page > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1&per_page={{ per_page }}">&laquo; Первая</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page|add:'-1' }}&per_page={{ per_page }}">&lsaquo; Предыдущая</a>
+                    </li>
                 {% endif %}
-            {% endfor %}
 
-            {% if page < total_pages %}
-                <a href="?page={{ page|add:'1' }}&per_page={{ per_page }}">Следующая &rsaquo;</a>
-                <a href="?page={{ total_pages|add:'-1' }}&per_page={{ per_page }}">Последняя &raquo;</a>
-            {% endif %}
-        </div>
+                {% for page_num in page_range %}
+                    {% if page_num == page %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                    {% elif page_num == 1 or page_num == total_pages or page_num >= page|add:'-2' and page_num <= page|add:'2' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_num }}&per_page={{ per_page }}">{{ page_num }}</a>
+                        </li>
+                    {% elif page_num == page|add:'-3' or page_num == page|add:'3' %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page < total_pages %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page|add:'1' }}&per_page={{ per_page }}">Следующая &rsaquo;</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ total_pages|add:'-1' }}&per_page={{ per_page }}">Последняя &raquo;</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
     {% endif %}
 {% endblock %}
 

@@ -3,17 +3,27 @@
 {% block content %}
     <h2>Мои закладки</h2>
     {% if bookmarks %}
-        <a href="{% url 'update_bookmarks' %}" class="btn btn-primary">Обновить закладки</a>
-        <ul>
+        <a href="{% url 'update_bookmarks' %}" class="btn btn-sm btn-primary mb-4">
+            <i class="bi bi-arrow-clockwise"></i> Обновить закладки
+        </a>
+        <div class="row">
             {% for bookmark in bookmarks %}
-                <li>
-                    <h3>{{ bookmark.vacancy.name }}</h3>
-                    <p>{{ bookmark.vacancy.company }}</p>
-                    <a href="{% url 'bookmark_detail' bookmark.vacancy.id %}">Подробнее</a>
-                    <a href="{% url 'delete_bookmark' bookmark.vacancy.id %}" class="btn btn-danger">Удалить закладку</a>
-                </li>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ bookmark.vacancy.title }}</h5>
+                            <p class="card-text">{{ bookmark.vacancy.company }}</p>
+                            <a href="{% url 'bookmark_detail' bookmark.vacancy.id %}"
+                               class="btn btn-light">Подробнее</a>
+                            <form method="post" action="{% url 'delete_bookmark' bookmark.vacancy.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">Удалить</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             {% endfor %}
-        </ul>
+        </div>
     {% else %}
         <p>У вас пока нет сохраненных вакансий.</p>
     {% endif %}

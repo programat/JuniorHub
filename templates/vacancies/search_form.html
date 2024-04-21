@@ -2,17 +2,17 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <form method="post">
+    <form method="post" class="input-group">
         {% csrf_token %}
-        <input type="text" name="query" placeholder="Должность, компания, навыки" value="Тинькофф">
-        <input type="text" name="area" placeholder="Город" value="1">
-        <select name="experience">
+        <input type="text" class="form-control" name="query" placeholder="Должность, компания, навыки" value="Тинькофф">
+        <input type="text" class="form-control" name="area" placeholder="Город" value="1">
+        <select name="experience" class="form-select">
             <option value="">Опыт работы</option>
             <option value="noExperience">Нет опыта</option>
             <option value="between1And3">От 1 года до 3 лет</option>
             <option value="between3And6">От 3 до 6 лет</option>
             <option value="moreThan6">Более 6 лет</option>
         </select>
-        <button type="submit">Найти</button>
+        <button class="btn btn-primary" type="submit">Найти</button>
     </form>
 {% endblock %}

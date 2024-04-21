@@ -1,0 +1,29 @@
+:root {
+  --peach-color: #FFE5B4;
+  --peach-color-dark: #FFCC99;
+}
+
+.bg-peach {
+  background-color: var(--peach-color);
+}
+
+.text-peach {
+  color: var(--peach-color-dark);
+}
+
+.btn-peach {
+  background-color: var(--peach-color);
+  border-color: var(--peach-color-dark);
+  color: #fff;
+}
+
+.pg-peach {
+  background-color: var(--peach-color);
+  color: #fff;
+}
+
+.btn-peach:hover {
+  background-color: var(--peach-color-dark);
+  border-color: var(--peach-color);
+  color: #fff;
+}
