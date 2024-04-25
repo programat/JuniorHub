@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-12 text-center">
+                <h1 class="display-8">Ошибка 404</h1>
+                <p class="lead">Запрашиваемая страница не существует или была удалена.</p>
+                <p>Мы уверены, что Вы не могли ошибиться, надо разобраться кто виноват...</p>
+            </div>
+        </div>
+        <div class="row mt-5">
+            <div class="col-md-3">
+                <div class="photo-block">
+                    <img src="{% static '404_page/photo_ceo.png' %}" alt="CEO" class="img-fluid">
+                    <div class="photo-glow"></div>
+                </div>
+                <div class="photo-caption">CEO</div>
+            </div>
+            <div class="col-md-3">
+                <div class="photo-block">
+                    <img src="{% static '404_page/photo_designer.png' %}" alt="Designer" class="img-fluid">
+                    <div class="photo-glow"></div>
+                </div>
+                <div class="photo-caption">Designer</div>
+            </div>
+            <div class="col-md-3">
+                <div class="photo-block">
+                    <img src="{% static '404_page/photo_dev.png' %}" alt="Developer" class="img-fluid">
+                    <div class="photo-glow"></div>
+                </div>
+                <div class="photo-caption">Developer</div>
+            </div>
+            <div class="col-md-3">
+                <div class="photo-block">
+                    <img src="{% static '404_page/photo_tester.png' %}" alt="Tester" class="img-fluid">
+                    <div class="photo-glow"></div>
+                </div>
+                <div class="photo-caption">Tester</div>
+            </div>
+        </div>
+        <div class="col-md-12 text-center">
+            <a href="{% url 'index' %}" class="btn btn-light mt-5">На главную</a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block styles %}
+    <style>
+        .photo-block {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            height: 270px;
+            z-index: 1;
+            overflow: visible;
+            border: 1px solid #f0f0f0;
+            border-radius: 20px;
+        }
+
+        .photo-block img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+            border-radius: 20px;
+        }
+
+        .photo-block:hover img {
+            transform: scale(1.1);
+        }
+
+        .photo-glow {
+            position: absolute;
+            top: -10px; /* Добавлен отступ сверху */
+            left: -10px; /* Добавлен отступ слева */
+            width: calc(100% + 20px); /* Увеличена ширина на 20px (по 10px с каждой стороны) */
+            height: calc(100% + 20px); /* Увеличена высота на 20px (по 10px сверху и снизу) */
+            background: radial-gradient(ellipse at center, rgba(255, 0, 0, 0.5) 0%, rgba(255, 0, 0, 0) 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            border-radius: 30px;
+            z-index: -1;
+          }
+
+        .photo-block:hover .photo-glow {
+            opacity: 0.4;
+        }
+
+        .photo-caption {
+            margin-top: 30px;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+{% endblock %}

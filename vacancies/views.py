@@ -12,6 +12,10 @@ def index(request):
     return render(request, 'vacancies/index.html')
 
 
+def page_not_found(request, exception=None):
+    return render(request, '404.html', status=404)
+
+
 def search_vacancies(request):
     if request.method == 'POST' or request.GET:
         query = request.POST.get('query', '')
