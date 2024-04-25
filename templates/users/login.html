@@ -15,6 +15,12 @@
                     <label for="password">Пароль</label>
                     <input type="password" class="form-control" id="password" name="password" required>
                 </div>
+                {% if error_message %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error_message }}
+                    </div>
+                {% endif %}
+
                 <button type="submit" class="btn btn-primary">Войти</button>
             </form>
         </div>
