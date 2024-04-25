@@ -1,82 +1,148 @@
+<!-- users/profile.html -->
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Профиль пользователя{% endblock %}
+{% block title %}Профиль{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h2>Профиль пользователя</h2>
-    <div class="row">
-        <div class="col-md-3">
-            {% if user.profile_image %}
-                <img src="{{ user.profile_image.url }}" class="img-fluid rounded-circle" alt="User Avatar">
-            {% else %}
-                <img src="{% static 'default_avatar.webp' %}" class="img-fluid rounded-circle" alt="Default Avatar">
-            {% endif %}
-        </div>
-        <div class="col-md-9">
-            <p><strong>Имя пользователя:</strong> <span id="username">{{ user.username }}</span></p>
-            <p><strong>Email:</strong> <span id="email">{{ user.email }}</span></p>
-            <p><strong>Имя:</strong> <span id="first_name">{{ user.first_name }}</span></p>
-            <p><strong>Фамилия:</strong> <span id="last_name">{{ user.last_name }}</span></p>
-            <p><strong>Биография:</strong> <span id="bio">{{ user.bio }}</span></p>
-            <p><strong>Местоположение:</strong> <span id="location">{{ user.location }}</span></p>
-            <p><strong>Дата рождения:</strong> <span id="birth_date">{{ user.birth_date }}</span></p>
-            
-            <button id="edit-profile-btn" class="btn btn-primary">Редактировать профиль</button>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3">
+                {% if user.profile_image %}
+                    <img src="{{ user.profile_image.url }}" class="img-fluid rounded-circle" alt="User Avatar">
+                {% else %}
+                    <img src="{% static 'default_avatar.webp' %}" class="img-fluid rounded-circle" alt="Default Avatar">
+                {% endif %}
+            </div>
+            <div class="col-md-9">
+                <h3>Профиль пользователя {{ user.username }}</h3>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <div id="profile-info">
+                    <p><strong>Имя пользователя:</strong> {{ user.username }}</p>
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                    <p><strong>Имя:</strong> {{ user.first_name }}</p>
+                    <p><strong>Фамилия:</strong> {{ user.last_name }}</p>
+                    <p><strong>Биография:</strong> {{ user.bio }}</p>
+                    <p><strong>Местоположение:</strong> {{ user.location }}</p>
+                    <p><strong>Дата рождения:</strong> {{ user.birth_date }}</p>
+                    <button id="edit-profile-btn" class="btn btn-primary">Редактировать профиль</button>
+                    <a href="{% url 'change_password' %}" class="btn btn-secondary">Изменить пароль</a>
+                </div>
+
+                <div id="edit-profile-form" style="display: none;">
+                    <h5>Редактировать профиль</h5>
+                    <form id="profile-form" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="form-group">
+                            <label for="id_username">Имя пользователя:</label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.username.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_email">Email:</label>
+                            {{ form.email }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_first_name">Имя:</label>
+                            {{ form.first_name }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_last_name">Фамилия:</label>
+                            {{ form.last_name }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_bio">Биография:</label>
+                            {{ form.bio }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_location">Местоположение:</label>
+                            {{ form.location }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_birth_date">Дата рождения:</label>
+                            {{ form.birth_date }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_profile_image">Изображение профиля:</label>
+                            {{ form.profile_image }}
+                        </div>
+
+                        <button type="submit" class="btn btn-success">Сохранить</button>
+                        <button type="button" id="cancel-edit-btn" class="btn btn-light">Отмена</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
-    
-    <div id="edit-profile-form" style="display: none;">
-        <h3>Редактировать профиль</h3>
-        <form id="profile-form" method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="btn btn-success">Сохранить</button>
-            <button type="button" id="cancel-edit-btn" class="btn btn-secondary">Отмена</button>
-        </form>
-    </div>
-</div>
 {% endblock %}
 
 {% block scripts %}
-<script>
-$(document).ready(function() {
-    $('#edit-profile-btn').click(function() {
-        $('#edit-profile-form').show();
-    });
-    
-    $('#cancel-edit-btn').click(function() {
-        $('#edit-profile-form').hide();
-    });
-    
-    $('#profile-form').submit(function(e) {
-        e.preventDefault();
-        var formData = new FormData(this);
-        
-        $.ajax({
-            url: "{% url 'profile' %}",
-            type: 'POST',
-            data: formData,
-            success: function (data) {
-                if (data.status === 'success') {
-                    $('#username').text($('#id_username').val());
-                    $('#email').text($('#id_email').val());
-                    $('#first_name').text($('#id_first_name').val());
-                    $('#last_name').text($('#id_last_name').val());
-                    $('#bio').text($('#id_bio').val());
-                    $('#location').text($('#id_location').val());
-                    $('#birth_date').text($('#id_birth_date').val());
-                    $('#edit-profile-form').hide();
-                } else {
-                    alert('Ошибка при сохранении профиля');
-                }
-            },
-            cache: false,
-            contentType: false,
-            processData: false
+    {{ block.super }}
+    <script>
+        $(document).ready(function () {
+            $('#edit-profile-btn').click(function () {
+                $('#profile-info').hide();
+                $('#edit-profile-form').show();
+            });
+
+            $('#cancel-edit-btn').click(function () {
+                $('#edit-profile-form').hide();
+                $('#profile-info').show();
+            });
+
+            $('#profile-form').submit(function (e) {
+                e.preventDefault();
+                var formData = new FormData(this);
+
+                $.ajax({
+                    url: "{% url 'profile' %}",
+                    type: 'POST',
+                    data: formData,
+                    success: function (data) {
+                        if (data.status === 'success') {
+                            $('#edit-profile-form').hide();
+                            $('#profile-info').show();
+                            // Обновление информации профиля на странице
+                            $('#username').text(data.username);
+                            $('#email').text(data.email);
+                            $('#first_name').text(data.first_name);
+                            $('#last_name').text(data.last_name);
+                            $('#bio').text(data.bio);
+                            $('#location').text(data.location);
+                            $('#birth_date').text(data.birth_date);
+                            
+                            location.reload(); // Добавлено для обновления страницы
+                        }
+                    },
+                    cache: false,
+                    contentType: false,
+                    processData: false
+                });
+            });
         });
-    });
-});
-</script>
+    </script>
 {% endblock %}
+
+

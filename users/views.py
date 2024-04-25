@@ -1,10 +1,11 @@
 # users/views.py
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate, logout
-from django.contrib.auth.forms import UserCreationForm
-from .forms import CustomUserCreationForm
+from django.contrib.auth import login, authenticate, logout, update_session_auth_hash
+from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
+from .forms import CustomUserCreationForm, CustomUserChangeForm
 
 
 def register(request):
@@ -26,15 +27,37 @@ def profile(request):
 @login_required
 def profile(request):
     if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST, request.FILES, instance=request.user)
+        form = CustomUserChangeForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             form.save()
             return JsonResponse({'status': 'success'})
         else:
             return JsonResponse({'status': 'error', 'errors': form.errors})
     else:
-        form = CustomUserCreationForm(instance=request.user)
-        return render(request, 'users/profile.html', {'form': form})
+        form = CustomUserChangeForm(instance=request.user, initial={
+            'username': request.user.username,
+            'email': request.user.email,
+            'first_name': request.user.first_name,
+            'last_name': request.user.last_name,
+            'bio': request.user.bio,
+            'location': request.user.location,
+            'birth_date': request.user.birth_date,
+        })
+    return render(request, 'users/profile.html', {'form': form})
+
+
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Ваш пароль был успешно изменен.')
+            return redirect('profile')
+    else:
+        form = PasswordChangeForm(request.user)
+    return render(request, 'users/change_password.html', {'form': form})
 
 
 def login_view(request):
