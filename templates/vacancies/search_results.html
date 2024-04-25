@@ -2,14 +2,30 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h4>Результаты поиска</h4>
+    <form method="get" class="input-group">
+        <input type="text" class="form-control" name="query" placeholder="Должность, компания, навыки"
+               value="{{ query }}">
+        <input type="text" class="form-control" name="area" placeholder="Город" value="{{ area_name }}">
+        <select name="experience" class="form-select">
+            <option value="">Опыт работы</option>
+            <option value="noExperience" {% if experience == 'noExperience' %}selected{% endif %}>Нет опыта</option>
+            <option value="between1And3" {% if experience == 'between1And3' %}selected{% endif %}>От 1 года до 3 лет
+            </option>
+            <option value="between3And6" {% if experience == 'between3And6' %}selected{% endif %}>От 3 до 6 лет</option>
+            <option value="moreThan6" {% if experience == 'moreThan6' %}selected{% endif %}>Более 6 лет</option>
+        </select>
+        <button class="btn btn-primary" type="submit">Найти</button>
+    </form>
+
+    <h5 class="mt-3">Вот, что нашлось:</h5>
 
     <div class="row">
         {% for vacancy in vacancies %}
             <div class="col-md-6 col-lg-4">
                 <div class="card mb-3">
                     <div class="card-body">
-                        <h5 class="card-title"><a href="{% url 'vacancy_detail' vacancy.id %}">{{ vacancy.name }}</a></h5>
+                        <h5 class="card-title"><a href="{% url 'vacancy_detail' vacancy.id %}">{{ vacancy.name }}</a>
+                        </h5>
                         <p class="card-text">{{ vacancy.employer.name }}</p>
                         <p>{{ vacancy.alternate_url }}</p>
                         <form method="post" action="{% url 'add_to_bookmarks' vacancy.id %}">
@@ -32,10 +48,13 @@
             <ul class="pagination justify-content-center">
                 {% if page > 1 %}
                     <li class="page-item">
-                        <a class="page-link" href="?page=1&per_page={{ per_page }}">&laquo; Первая</a>
+                        <a class="page-link"
+                           href="?page=1&per_page={{ per_page }}&query={{ query }}&area={{ area_name }}&experience={{ experience }}">&laquo;
+                            Первая</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page|add:'-1' }}&per_page={{ per_page }}">&lsaquo; Предыдущая</a>
+                        <a class="page-link" href="?page={{ page|add:'-1' }}&per_page={{ per_page }}&query={{ query }}&area={{ area_name }}&experience={{ experience }}">&lsaquo;
+                            Предыдущая</a>
                     </li>
                 {% endif %}
 
@@ -46,7 +65,7 @@
                         </li>
                     {% elif page_num == 1 or page_num == total_pages or page_num >= page|add:'-2' and page_num <= page|add:'2' %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_num }}&per_page={{ per_page }}">{{ page_num }}</a>
+                            <a class="page-link" href="?page={{ page_num }}&per_page={{ per_page }}&query={{ query }}&area={{ area_name }}&experience={{ experience }}">{{ page_num }}</a>
                         </li>
                     {% elif page_num == page|add:'-3' or page_num == page|add:'3' %}
                         <li class="page-item disabled">
@@ -57,10 +76,12 @@
 
                 {% if page < total_pages %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page|add:'1' }}&per_page={{ per_page }}">Следующая &rsaquo;</a>
+                        <a class="page-link" href="?page={{ page|add:'1' }}&per_page={{ per_page }}&query={{ query }}&area={{ area_name }}&experience={{ experience }}">Следующая
+                            &rsaquo;</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ total_pages|add:'-1' }}&per_page={{ per_page }}">Последняя &raquo;</a>
+                        <a class="page-link" href="?page={{ total_pages|add:'-1' }}&per_page={{ per_page }}&query={{ query }}&area={{ area_name }}&experience={{ experience }}">Последняя
+                            &raquo;</a>
                     </li>
                 {% endif %}
             </ul>

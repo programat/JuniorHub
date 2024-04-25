@@ -17,61 +17,62 @@ def page_not_found(request, exception=None):
 
 
 def search_vacancies(request):
-    if request.method == 'POST' or request.GET:
-        query = request.POST.get('query', '')
-        area_name = request.POST.get('area')
-        experience = request.POST.get('experience')
+    query = request.GET.get('query', '')
+    area_name = request.GET.get('area', '')
+    experience = request.GET.get('experience', '')
 
-        page = int(request.GET.get('page', 1))
-        per_page = 20
+    page = int(request.GET.get('page', 1))
+    per_page = 20
 
-        params = {
-            'page': page,
-            'per_page': per_page
-        }
+    params = {
+        'page': page,
+        'per_page': per_page
+    }
 
-        if query:
-            params['text'] = query
-        if area_name:
-            if not area_name.isdigit():
-                api_client = HhApiClient()
-                area_id = api_client.find_area(area_name)
-                if area_id:
-                    params['area'] = area_id
-            else:
-                params['area'] = area_name
-        if experience:
-            params['experience'] = experience
+    if query:
+        params['text'] = query
+    if area_name:
+        if not area_name.isdigit():
+            api_client = HhApiClient()
+            area_id = api_client.find_area(area_name)
+            if area_id:
+                params['area'] = area_id
+        else:
+            params['area'] = area_name
+    if experience:
+        params['experience'] = experience
 
-        # Выполняем поиск вакансий через API HH.ru
-        api_client = HhApiClient()
-        text = params.pop('text', '')
-        try:
-            vacancies = api_client.search_vacancies(text, **params)
-        except requests.exceptions.HTTPError as e:
-            return HttpResponse(f'Error: {e}', status=400)
+    # Выполняем поиск вакансий через API HH.ru
+    api_client = HhApiClient()
+    text = params.pop('text', '')
+    try:
+        vacancies = api_client.search_vacancies(text, **params)
+    except requests.exceptions.HTTPError as e:
+        return HttpResponse(f'Error: {e}', status=400)
 
-        total_pages = vacancies['pages']
-        page_range = range(1, total_pages + 1)
+    total_pages = vacancies['pages']
+    page_range = range(1, total_pages + 1)
 
-        if total_pages > 7:
-            if page <= 4:
-                page_range = range(1, 6)
-            elif page >= total_pages - 3:
-                page_range = range(total_pages - 4, total_pages + 1)
-            else:
-                page_range = range(page - 2, page + 3)
+    if total_pages > 7:
+        if page <= 4:
+            page_range = range(1, 6)
+        elif page >= total_pages - 3:
+            page_range = range(total_pages - 4, total_pages + 1)
+        else:
+            page_range = range(page - 2, page + 3)
 
-        context = {
-            'vacancies': vacancies['items'],
-            'page': page,
-            'total_pages': total_pages,
-            'page_range': page_range,
-            'per_page': per_page
-        }
-        return render(request, 'vacancies/search_results.html', context)
+    context = {
+        'vacancies': vacancies['items'],
+        'page': page,
+        'total_pages': total_pages,
+        'page_range': page_range,
+        'per_page': per_page,
+        'query': query,
+        'area_name': area_name,
+        'experience': experience
+    }
+    return render(request, 'vacancies/search_results.html', context)
 
-    return render(request, 'vacancies/search_form.html')
 
 
 def add_to_bookmarks(request, vacancy_id):
