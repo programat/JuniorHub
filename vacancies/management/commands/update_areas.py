@@ -1,14 +1,19 @@
 from django.core.management.base import BaseCommand
 from vacancies.models import Area
-from vacancies.hhapi import HhApiClient
-
+from api.api_clients import ApiClientFactory
 
 class Command(BaseCommand):
-    help = 'Updates areas from HH.ru API'
+    help = 'Updates areas from API'
 
     def handle(self, *args, **options):
-        api_client = HhApiClient()
-        areas_data = api_client.get_areas()
+        source = options.get('source', 'hh')  # Получаем источник данных из аргументов команды
+        api_client = ApiClientFactory.create_api_client(source)
+
+        try:
+            areas_data = api_client.get_areas()
+        except NotImplementedError:
+            self.stdout.write(self.style.WARNING('Получение списка регионов не поддерживается для выбранного API'))
+            return
 
         def create_areas(areas, parent=None):
             for area_data in areas:

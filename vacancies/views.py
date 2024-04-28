@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404, redirect
 from .models import Vacancy, VacancyDetail, Bookmark
-from .hhapi import HhApiClient
+from api.api_clients import ApiClientFactory
 
 
 def index(request):
@@ -17,9 +17,11 @@ def page_not_found(request, exception=None):
 
 
 def search_vacancies(request):
-    query = request.GET.get('query', '')
-    area_name = request.GET.get('area', '')
+    user = request.user
+    query = request.GET.get('query', 'Тинькофф')
+    area_name = request.GET.get('area', user.location if user.is_authenticated else '')
     experience = request.GET.get('experience', '')
+    source = request.GET.get('source', 'hh')
 
     page = int(request.GET.get('page', 1))
     per_page = 20
@@ -29,21 +31,27 @@ def search_vacancies(request):
         'per_page': per_page
     }
 
+    # Выполняем поиск вакансий через API
+    api_client = ApiClientFactory.create_api_client(source)
+
     if query:
         params['text'] = query
     if area_name:
         if not area_name.isdigit():
-            api_client = HhApiClient()
-            area_id = api_client.find_area(area_name)
-            if area_id:
-                params['area'] = area_id
+            try:
+                area_id = api_client.find_area(area_name)
+                if area_id:
+                    params['area'] = area_id
+
+            # TODO Обработать исключение NotImplementedError
+            except NotImplementedError:
+                # Обработка случая, когда поиск региона не поддерживается для выбранного API
+                pass
         else:
             params['area'] = area_name
     if experience:
         params['experience'] = experience
 
-    # Выполняем поиск вакансий через API HH.ru
-    api_client = HhApiClient()
     text = params.pop('text', '')
     try:
         vacancies = api_client.search_vacancies(text, **params)
@@ -74,9 +82,9 @@ def search_vacancies(request):
     return render(request, 'vacancies/search_results.html', context)
 
 
-
 def add_to_bookmarks(request, vacancy_id):
-    api_client = HhApiClient()
+    source = request.GET.get('source', 'hh')
+    api_client = ApiClientFactory.create_api_client(source)
     vacancy_data = api_client.get_vacancy(vacancy_id)
 
     if request.method == 'POST':
@@ -147,7 +155,8 @@ def add_to_bookmarks(request, vacancy_id):
 
 
 def vacancy_detail(request, vacancy_id):
-    api_client = HhApiClient()
+    source = request.GET.get('source', 'hh')
+    api_client = ApiClientFactory.create_api_client(source)
     vacancy = api_client.get_vacancy(vacancy_id)
     return render(request, 'vacancies/vacancy_detail.html', {'vacancy': vacancy})
 
@@ -159,7 +168,8 @@ def bookmark_detail(request, vacancy_id):
 
 @login_required
 def update_bookmarks(request):
-    api_client = HhApiClient()
+    source = request.GET.get('source', 'hh')
+    api_client = ApiClientFactory.create_api_client(source)
     bookmarks = request.user.bookmarks.all()
     for bookmark in bookmarks:
         vacancy = bookmark.vacancy
@@ -195,6 +205,7 @@ def delete_bookmark(request, vacancy_id):
     vacancy = get_object_or_404(Vacancy, pk=vacancy_id)
     request.user.bookmarks.filter(vacancy=vacancy).delete()
     return redirect('bookmarks')
+
 
 @login_required
 def bookmarks(request):

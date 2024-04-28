@@ -16,6 +16,7 @@ Including another URLconf
 """
 import django
 from django.contrib import admin
+from django.http import HttpResponseRedirect
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
@@ -23,8 +24,13 @@ from vacancies.views import page_not_found
 from django.conf.urls import handler404
 
 
+def redirect_to_vacancies(request):
+    return HttpResponseRedirect('/vacancies/')
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', redirect_to_vacancies),
     path('vacancies/', include('vacancies.urls')),
     path('users/', include('users.urls')),
     path('404/', page_not_found),

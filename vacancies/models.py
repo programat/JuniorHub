@@ -2,8 +2,6 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.contrib.auth.models import User
 
-from vacancies.hhapi import HhApiClient
-
 
 class Vacancy(models.Model):
     title = models.CharField(max_length=255)
@@ -17,12 +15,11 @@ class Vacancy(models.Model):
     def __str__(self):
         return self.title
 
-    def save_with_details(self):
+    def save_with_details(self, api_client):
         # Сохраняем вакансию
         self.save()
 
-        # Получаем детали вакансии из API HH.ru
-        api_client = HhApiClient()
+        # Получаем детали вакансии из API
         vacancy_data = api_client.get_vacancy(self.url)
 
         # Сохраняем детали вакансии
