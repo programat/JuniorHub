@@ -1,7 +1,9 @@
+import json
+
 import requests
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404, redirect
 from .models import Vacancy, VacancyDetail, Bookmark
@@ -211,3 +213,20 @@ def delete_bookmark(request, vacancy_id):
 def bookmarks(request):
     bookmarks = request.user.bookmarks.all()
     return render(request, 'vacancies/bookmarks.html', {'bookmarks': bookmarks})
+
+
+def get_tinkoff_internships(request):
+    parser_url = 'http://127.0.0.1:5000/internships'
+    try:
+        response = requests.get(parser_url)
+        # Ensure the response content is decoded properly
+        vacancies = response.json()
+    except requests.RequestException as e:
+        # Handle request errors
+        return JsonResponse({'error': 'Request failed', 'details': str(e)}, status=500)
+    except ValueError as e:
+        # Handle JSON decoding errors
+        return JsonResponse({'error': 'Failed to parse JSON', 'details': str(e)}, status=500)
+
+    # Return the decoded JSON as a response
+    return JsonResponse(vacancies, safe=False)
