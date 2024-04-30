@@ -1,11 +1,14 @@
 import json
 
+import grpc
 import requests
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404, redirect
+
+from .grpc_client import get_internships
 from .models import Vacancy, VacancyDetail, Bookmark
 from api.api_clients import ApiClientFactory
 
@@ -230,3 +233,26 @@ def get_tinkoff_internships(request):
 
     # Return the decoded JSON as a response
     return JsonResponse(vacancies, safe=False)
+
+
+def internships_view(request):
+    try:
+        categories = get_internships()
+        internships_data = []
+        for category in categories:
+            positions = []
+            for position in category.positions:
+                positions.append({
+                    'title': position.title,
+                    'description': position.description,
+                    'status': position.status,
+                    'link': position.link,
+                    'area': position.area
+                })
+            internships_data.append({
+                'category': category.category,
+                'positions': positions
+            })
+        return JsonResponse({'internships': internships_data})
+    except grpc.RpcError as e:
+        return JsonResponse({'error': f'gRPC error: {e.details()}'}, status=500)

@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package internship;
+
+service InternshipService {
+  rpc GetInternships(GetInternshipsRequest) returns (GetInternshipsResponse) {}
+}
+
+message Internship {
+  string title = 1;
+  string description = 2;
+  string status = 3;
+  string link = 4;
+  string area = 5;
+}
+
+message InternshipCategory {
+  string category = 1;
+  repeated Internship positions = 2;
+}
+
+message GetInternshipsRequest {
+}
+
+message GetInternshipsResponse {
+  repeated InternshipCategory categories = 1;
+}
