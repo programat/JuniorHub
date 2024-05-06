@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from vacancies.models import Area
-from api.api_clients import ApiClientFactory
+from data_providers.data_provider_services import ApiClientFactory
 
 class Command(BaseCommand):
     help = 'Updates areas from API'

@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404, redirect
 
 from .grpc_client import get_internships
 from .models import Vacancy, VacancyDetail, Bookmark
-from api.api_clients import ApiClientFactory
+from data_providers.data_provider_services import DataProviderFactory, HhDataProvider
 
 
 def index(request):
@@ -21,12 +21,13 @@ def page_not_found(request, exception=None):
     return render(request, '404.html', status=404)
 
 
-def search_vacancies(request):
+# TODO: удалить старый метод old_search_vacancies
+def old_search_vacancies(request):
     user = request.user
     query = request.GET.get('query', 'Тинькофф')
     area_name = request.GET.get('area', user.location if user.is_authenticated else '')
     experience = request.GET.get('experience', '')
-    source = request.GET.get('source', 'hh')
+    sources = request.GET.getlist('source', ['hh', 'tinkoff'])
 
     page = int(request.GET.get('page', 1))
     per_page = 20
@@ -36,34 +37,37 @@ def search_vacancies(request):
         'per_page': per_page
     }
 
-    # Выполняем поиск вакансий через API
-    api_client = ApiClientFactory.create_api_client(source)
+    vacancies_by_source = {}
+    internships = []
 
-    if query:
-        params['text'] = query
-    if area_name:
-        if not area_name.isdigit():
-            try:
-                area_id = api_client.find_area(area_name)
-                if area_id:
-                    params['area'] = area_id
+    for source in sources:
+        api_client = DataProviderFactory.create_data_provider(source)
 
-            # TODO Обработать исключение NotImplementedError
-            except NotImplementedError:
-                # Обработка случая, когда поиск региона не поддерживается для выбранного API
-                pass
-        else:
-            params['area'] = area_name
-    if experience:
-        params['experience'] = experience
+        if query:
+            params['text'] = query
+        if area_name:
+            if not area_name.isdigit():
+                try:
+                    area_id = api_client.find_area(area_name)
+                    if area_id:
+                        params['area'] = area_id
+                except NotImplementedError:
+                    pass
+            else:
+                params['area'] = area_name
+        if experience:
+            params['experience'] = experience
 
-    text = params.pop('text', '')
-    try:
-        vacancies = api_client.search_vacancies(text, **params)
-    except requests.exceptions.HTTPError as e:
-        return HttpResponse(f'Error: {e}', status=400)
+        text = params.pop('text', '')
+        try:
+            vacancies = api_client.get_vacancies(text, **params)
+            vacancies_by_source[source] = vacancies
+            if source == 'tinkoff':
+                internships = vacancies
+        except requests.exceptions.HTTPError as e:
+            return HttpResponse(f'Error: {e}', status=400)
 
-    total_pages = vacancies['pages']
+    total_pages = max(len(vacancies) // per_page for vacancies in vacancies_by_source.values())
     page_range = range(1, total_pages + 1)
 
     if total_pages > 7:
@@ -75,7 +79,8 @@ def search_vacancies(request):
             page_range = range(page - 2, page + 3)
 
     context = {
-        'vacancies': vacancies['items'],
+        'vacancies_by_source': vacancies_by_source,
+        'internships': internships,
         'page': page,
         'total_pages': total_pages,
         'page_range': page_range,
@@ -87,9 +92,80 @@ def search_vacancies(request):
     return render(request, 'vacancies/search_results.html', context)
 
 
-def add_to_bookmarks(request, vacancy_id):
+def search_vacancies(request):
+    user = request.user
+    query = request.GET.get('query', 'Тинькофф')
+    area_name = request.GET.get('area', user.location if user.is_authenticated else '')
+    experience = request.GET.get('experience', '')
+    sources = request.GET.getlist('source', ['hh', 'tinkoff'])
+
+    page = int(request.GET.get('page', 1))
+    per_page = 20
+
+    params = {
+        'page': page,
+        'per_page': per_page
+    }
+
+    vacancies_by_source = {}
+    internships = []
+
+    for source in sources:
+        data_provider = DataProviderFactory.create_data_provider(source)
+
+        if query:
+            params['text'] = query
+        if area_name and isinstance(data_provider, HhDataProvider):
+            if not area_name.isdigit():
+                try:
+                    area_id = data_provider.find_area(area_name)
+                    if area_id:
+                        params['area'] = area_id
+                except NotImplementedError:
+                    pass
+            else:
+                params['area'] = area_name
+        if experience:
+            params['experience'] = experience
+
+        text = params.pop('text', '')
+        try:
+            vacancies = data_provider.get_vacancies(text, **params)
+            vacancies_by_source[source] = vacancies
+            if source == 'tinkoff':
+                internships = vacancies
+        except requests.exceptions.HTTPError as e:
+            return HttpResponse(f'Error: {e}', status=400)
+
+    total_pages = sum(len(vacancies) // per_page for vacancies in vacancies_by_source.values())
+    page_range = range(1, total_pages + 1)
+
+    if total_pages > 7:
+        if page <= 4:
+            page_range = range(1, 6)
+        elif page >= total_pages - 3:
+            page_range = range(total_pages - 4, total_pages + 1)
+        else:
+            page_range = range(page - 2, page + 3)
+
+    context = {
+        'vacancies_by_source': vacancies_by_source,
+        'internships': internships,
+        'page': page,
+        'total_pages': total_pages,
+        'page_range': page_range,
+        'per_page': per_page,
+        'query': query,
+        'area_name': area_name,
+        'experience': experience
+    }
+    return render(request, 'vacancies/search_results.html', context)
+
+
+# TODO: удалить старый метод old_add_to_bookmarks
+def old_add_to_bookmarks(request, vacancy_id):
     source = request.GET.get('source', 'hh')
-    api_client = ApiClientFactory.create_api_client(source)
+    api_client = DataProviderFactory.create_api_client(source)
     vacancy_data = api_client.get_vacancy(vacancy_id)
 
     if request.method == 'POST':
@@ -159,10 +235,39 @@ def add_to_bookmarks(request, vacancy_id):
     return redirect('vacancy_detail', vacancy_id=vacancy_id)
 
 
+def add_to_bookmarks(request, vacancy_id):
+    source = request.GET.get('source', 'hh')
+    data_provider = DataProviderFactory.create_data_provider(source)
+    vacancy_data = data_provider.get_vacancy_details(vacancy_id)
+
+    if request.method == 'POST':
+        user = request.user
+
+        # Сохраняем информацию о вакансии в базу данных
+        vacancy, created = Vacancy.objects.get_or_create(
+            url=vacancy_data['alternate_url'],
+            defaults={
+                'title': vacancy_data['name'],
+                'description': vacancy_data.get('description', ''),
+                'company': vacancy_data['employer']['name'],
+                'source': source
+            }
+        )
+        if created:
+            data_provider.save_vacancy_details(vacancy_id, vacancy_data)
+
+        # Проверяем, есть ли уже эта вакансия в закладках у пользователя
+        bookmark, created = Bookmark.objects.get_or_create(user=user, vacancy=vacancy)
+
+        return redirect('bookmarks')
+
+    return redirect('vacancy_detail', vacancy_id=vacancy_id)
+
+
 def vacancy_detail(request, vacancy_id):
     source = request.GET.get('source', 'hh')
-    api_client = ApiClientFactory.create_api_client(source)
-    vacancy = api_client.get_vacancy(vacancy_id)
+    data_provider = DataProviderFactory.create_data_provider(source)
+    vacancy = data_provider.get_vacancy_details(vacancy_id)
     return render(request, 'vacancies/vacancy_detail.html', {'vacancy': vacancy})
 
 
@@ -171,10 +276,11 @@ def bookmark_detail(request, vacancy_id):
     return render(request, 'vacancies/bookmark_detail.html', {'vacancy': vacancy})
 
 
+# TODO: удалить старый метод old_update_bookmarks
 @login_required
-def update_bookmarks(request):
+def old_update_bookmarks(request):
     source = request.GET.get('source', 'hh')
-    api_client = ApiClientFactory.create_api_client(source)
+    api_client = DataProviderFactory.create_api_client(source)
     bookmarks = request.user.bookmarks.all()
     for bookmark in bookmarks:
         vacancy = bookmark.vacancy
@@ -201,6 +307,28 @@ def update_bookmarks(request):
         vacancy_detail.schedule = vacancy_data.get('schedule', {}).get('name', '')
         vacancy_detail.skills = ', '.join([skill['name'] for skill in vacancy_data.get('key_skills', [])])
         vacancy_detail.save()
+
+    return redirect('bookmarks')
+
+
+@login_required
+def update_bookmarks(request):
+    source = request.GET.get('source', 'hh')
+    data_provider = DataProviderFactory.create_data_provider(source)
+    bookmarks = request.user.bookmarks.all()
+    for bookmark in bookmarks:
+        vacancy = bookmark.vacancy
+        vacancy_id = vacancy.url.split('/')[-1]
+        vacancy_data = data_provider.get_vacancy_details(vacancy_id)
+
+        # Обновляем данные вакансии и сохраняем изменения
+        vacancy.title = vacancy_data['name']
+        vacancy.company = vacancy_data['employer']['name']
+        vacancy.description = vacancy_data['description']
+        vacancy.save()
+
+        # Обновляем или создаем объект VacancyDetail
+        data_provider.save_vacancy_details(vacancy_id, vacancy_data)
 
     return redirect('bookmarks')
 

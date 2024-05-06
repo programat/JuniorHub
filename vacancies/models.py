@@ -47,6 +47,7 @@ class VacancyDetail(models.Model):
     schedule = models.CharField(max_length=50)
     skills = models.TextField()
     source_id = models.CharField(max_length=50)
+    status = models.CharField(max_length=25, default='active', blank=True)
 
 
 class Bookmark(models.Model):

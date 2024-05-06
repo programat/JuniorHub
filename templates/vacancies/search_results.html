@@ -1,5 +1,6 @@
-<!-- search_results.html -->
 {% extends 'base.html' %}
+{% load static %}
+<!-- search_results.html -->
 
 {% block content %}
     <form method="get" class="input-group">
@@ -17,28 +18,50 @@
         <button class="btn btn-primary" type="submit">Найти</button>
     </form>
 
+    {% if 'tinkoff' in vacancies_by_source and 'тинькофф' in query|lower %}
+        <div class="hero-block mt-4">
+            <h5>Стажировки от</h5>
+            <img src="{% static 'tinkoff_logo.webp' %}" style="height: 50px;" alt="Tinkoff Logo">
+            <div class="internships-carousel">
+                {% for vacancy in vacancies_by_source.tinkoff %}
+                    <div class="internship-card">
+                        <h5>{{ vacancy.title }}</h5>
+                        <p>{{ vacancy.description|truncatewords:20 }}</p>
+                        <span class="badge {% if vacancy.status == 'active' %}bg-success{% else %}bg-danger{% endif %}">
+                            {% if vacancy.status == 'active' %}Открыт набор{% else %}Закрыт набор{% endif %}
+                        </span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
     <h5 class="mt-3">Вот, что нашлось:</h5>
 
     <div class="row">
-        {% for vacancy in vacancies %}
-            <div class="col-md-6 col-lg-4">
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title"><a href="{% url 'vacancy_detail' vacancy.id %}">{{ vacancy.name }}</a>
-                        </h5>
-                        <p class="card-text">{{ vacancy.employer.name }}</p>
-                        <p>{{ vacancy.alternate_url }}</p>
-                        <form method="post" action="{% url 'add_to_bookmarks' vacancy.id %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-light">Сохранить в закладки</button>
-                        </form>
+        {% for source, vacancies in vacancies_by_source.items %}
+            {% for vacancy in vacancies %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title"><a
+                                    href="{% url 'vacancy_detail' vacancy.id %}">{{ vacancy.name }}</a>
+                            </h5>
+                            <p class="card-text-light"> {{ source }}</p>
+                            <p class="card-text">{{ vacancy.employer.name }}</p>
+                            <p>{{ vacancy.alternate_url }}</p>
+                            <form method="post" action="{% url 'add_to_bookmarks' vacancy.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-light">Сохранить в закладки</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
-            </div>
-        {% empty %}
-            <div class="col">
-                <p>Не найдено вакансий по заданным критериям.</p>
-            </div>
+            {% empty %}
+                <div class="col">
+                    <p>Не найдено вакансий из {{ source }} по заданным критериям.</p>
+                </div>
+            {% endfor %}
         {% endfor %}
     </div>
 
@@ -53,7 +76,8 @@
                             Первая</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page|add:'-1' }}&per_page={{ per_page }}&query={{ query }}&area={{ area_name }}&experience={{ experience }}">&lsaquo;
+                        <a class="page-link"
+                           href="?page={{ page|add:'-1' }}&per_page={{ per_page }}&query={{ query }}&area={{ area_name }}&experience={{ experience }}">&lsaquo;
                             Предыдущая</a>
                     </li>
                 {% endif %}
@@ -65,7 +89,8 @@
                         </li>
                     {% elif page_num == 1 or page_num == total_pages or page_num >= page|add:'-2' and page_num <= page|add:'2' %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_num }}&per_page={{ per_page }}&query={{ query }}&area={{ area_name }}&experience={{ experience }}">{{ page_num }}</a>
+                            <a class="page-link"
+                               href="?page={{ page_num }}&per_page={{ per_page }}&query={{ query }}&area={{ area_name }}&experience={{ experience }}">{{ page_num }}</a>
                         </li>
                     {% elif page_num == page|add:'-3' or page_num == page|add:'3' %}
                         <li class="page-item disabled">
@@ -76,11 +101,13 @@
 
                 {% if page < total_pages %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page|add:'1' }}&per_page={{ per_page }}&query={{ query }}&area={{ area_name }}&experience={{ experience }}">Следующая
+                        <a class="page-link"
+                           href="?page={{ page|add:'1' }}&per_page={{ per_page }}&query={{ query }}&area={{ area_name }}&experience={{ experience }}">Следующая
                             &rsaquo;</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ total_pages|add:'-1' }}&per_page={{ per_page }}&query={{ query }}&area={{ area_name }}&experience={{ experience }}">Последняя
+                        <a class="page-link"
+                           href="?page={{ total_pages|add:'-1' }}&per_page={{ per_page }}&query={{ query }}&area={{ area_name }}&experience={{ experience }}">Последняя
                             &raquo;</a>
                     </li>
                 {% endif %}
