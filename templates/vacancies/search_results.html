@@ -26,10 +26,10 @@
                 {% for vacancy in vacancies_by_source.tinkoff %}
                     <div class="internship-card">
                         <h5>{{ vacancy.title }}</h5>
-                        <p>{{ vacancy.description|truncatewords:20 }}</p>
-                        <span class="badge {% if vacancy.status == 'active' %}bg-success{% else %}bg-danger{% endif %}">
-                            {% if vacancy.status == 'active' %}Открыт набор{% else %}Закрыт набор{% endif %}
+                        <span class="badge {% if vacancy.details.status == 'active' %}bg-success{% else %}bg-danger{% endif %}">
+                            {% if vacancy.details.status == 'active' %}Открыт набор{% else %}Закрыт набор{% endif %}
                         </span>
+                        <p>{{ vacancy.description|truncatewords:20 }}</p>
                     </div>
                 {% endfor %}
             </div>

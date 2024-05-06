@@ -113,22 +113,28 @@ class TinkoffDataProvider(VacancyDataProvider):
     def save_vacancies(self, vacancies):
         for category in vacancies:
             for position in category['positions']:
-                vacancy, created = Vacancy.objects.get_or_create(
+                vacancy, created = Vacancy.objects.update_or_create(
                     url=position['link'],
                     defaults={
                         'title': position['title'],
                         'description': position['description'],
                         'company': 'Тинькофф',
-                        'source': 'tinkoff'
+                        'source': 'tinkoff',
                     }
                 )
-                if created:
-                    # Сохраняем детали вакансии
-                    VacancyDetail.objects.create(
-                        vacancy=vacancy,
-                        area=position['area'],
-                        status=position['status']
-                    )
+                defaults = {
+                    'area': position['area'],
+                }
+                if 'status' in position:
+                    if position['status'] == 'Набор открыт':
+                        defaults['status'] = VacancyDetail.STATUS_ACTIVE
+                    elif position['status'] == 'Набор закрыт':
+                        defaults['status'] = VacancyDetail.STATUS_CLOSED
+
+                VacancyDetail.objects.update_or_create(
+                    vacancy=vacancy,
+                    defaults=defaults
+                )
 
     def save_vacancy_details(self, vacancy_id, details):
         # Реализация сохранения деталей стажировки в базу данных

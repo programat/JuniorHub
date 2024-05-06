@@ -37,7 +37,15 @@ class Vacancy(models.Model):
 
 
 class VacancyDetail(models.Model):
-    vacancy = models.ForeignKey(Vacancy, on_delete=models.CASCADE, related_name='details')
+    STATUS_ACTIVE = 'active'
+    STATUS_CLOSED = 'closed'
+
+    STATUS_CHOICES = [
+        (STATUS_ACTIVE, 'Набор открыт'),
+        (STATUS_CLOSED, 'Набор закрыт'),
+    ]
+
+    vacancy = models.OneToOneField(Vacancy, on_delete=models.CASCADE, related_name='details')
     salary_from = models.IntegerField(null=True)
     salary_to = models.IntegerField(null=True)
     currency = models.CharField(max_length=10)
@@ -47,7 +55,7 @@ class VacancyDetail(models.Model):
     schedule = models.CharField(max_length=50)
     skills = models.TextField()
     source_id = models.CharField(max_length=50)
-    status = models.CharField(max_length=25, default='active', blank=True)
+    status = models.CharField(max_length=25, choices=STATUS_CHOICES, default=STATUS_ACTIVE, blank=True)
 
 
 class Bookmark(models.Model):
